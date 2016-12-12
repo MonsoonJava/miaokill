@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+        
+        <!-- 1.加载资源文件 -->
+   <bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<!-- 允许JVM参数覆盖 -->
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+		<!-- 忽略没有找到的资源文件 -->
+		<property name="ignoreResourceNotFound" value="true" />
+		<!-- 配置资源文件 -->
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+    
+    <!-- 数据库连接池 --> 
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"> 
+		<property name="driverClass" value="${jdbc.driverClassName}"/>
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<property name="user" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<!-- c3p0私有属性 -->
+		<property name="maxPoolSize" value="30"/>
+		<property name="minPoolSize" value="10"/>
+		<property name="autoCommitOnClose" value="false"/>
+		<property name="checkoutTimeout" value="1000"/>
+		<property name="acquireRetryAttempts" value="2"/>
+	</bean>
+
+	<!-- 配置sqlSessionFactory对象 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 注入数据库连接池 --> 
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 配置mybatis的配置文件 -->
+		<property name="configLocation" value="classpath:mybatis/mybatis-config.xml"></property>
+		<!-- 指定pojo的包别名扫描 -->
+		<property name="typeAliasesPackage" value="org.seckill.pojo"/>
+		<!-- 指定扫描mybatis的xml文件 -->
+		<property name="mapperLocations" value="classpath:mapper/*.xml"/>
+	</bean>
+	
+	<!-- 配置扫描DAO接口包.实现动态DAO接口，注入到spring容器中 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 注入sqlSessionFactory -->
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+		<property name="basePackage" value="org.seckill.dao"/>
+	</bean>
+
+</beans>
